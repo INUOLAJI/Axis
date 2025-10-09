@@ -1,0 +1,10 @@
+*.log
+*.tmp
+*.cache
+.DS_Store
+Thumbs.db
+conn.php
+node_modules/
+.vscode/
+.idea/
+/session/

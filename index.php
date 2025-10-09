@@ -1,5 +1,5 @@
-<?php
-session_start();
+<?php 
+require_once 'db_conn/conn.php'; // Ensure the database connection is established
 ?>
 <!DOCTYPE html>
 <html lang="en">
