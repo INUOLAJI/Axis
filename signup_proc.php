@@ -1,7 +1,9 @@
 <?php
-require_once 'db_conn/conn.php'; // Now contains the PDO connection $conn
-// Note: You must ensure 'Sanitize' function is also available, either in conn.php or here.
-global $conn;
+// signup_proc.php
+
+require_once 'db_conn/conn.php'; 
+// Assumes conn.php defines: supabaseRequest(), Sanitize(), and session_start() is active.
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['signup'])) {
     
     // 1. Sanitize and prepare input
@@ -24,68 +26,73 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['signup'])) {
         exit;
     }
 
-    // 3. Check for existing user (fname or email)
-    // Using a single, efficient query with prepared statements
-    $check_sql = "SELECT id FROM signup_biz WHERE fname = :fname OR email = :email";
-    
-    try {
-        $stmt = $conn->prepare($check_sql);
-        $stmt->execute(['fname' => $fname, 'email' => $email]);
-        $user_count = $stmt->rowCount();
+    // 3. Check for existing user (fname OR email) via API
+    // The filter checks for rows where fname matches OR email matches.
+    $check_endpoint = "signup_biz?or=(fname.eq.$fname,email.eq.$email)&select=fname,email";
+    $existing_data = supabaseRequest($check_endpoint, 'GET');
 
-        if ($user_count > 0) {
-            // Fetch one row to determine which field caused the conflict
-            $existing_user = $stmt->fetch();
-
-            $alert_message = '';
-            if ($existing_user['fname'] === $fname) {
-                $alert_message = "User with '{$fname}' already exists.";
-            } else if ($existing_user['email'] === $email) {
-                $alert_message = "User with '{$email}' already exists.";
-            }
-
-            echo "<script>
-            alert('{$alert_message}');
-            window.location='index.php';
-            </script>";
-            exit;
-
-        } else {
-            // 4. Insert New User
-            $insert_sql = "INSERT INTO signup_biz (uniqid, fname, email, password) 
-                           VALUES (:uid, :fname, :email, :password_hash)";
-            
-            $stmt = $conn->prepare($insert_sql);
-            
-            if ($stmt->execute([
-                'uid' => $uid,
-                'fname' => $fname,
-                'email' => $email,
-                'password_hash' => $pword_hash
-            ])) {
-                echo "<script>
-                alert('Account Created Successfully! Go back to the login page to sign in');
-                window.location='index.php?showlogin=1';
-                </script>";
-                exit;
-            } else {
-                // This block is often caught by the PDOException, but good to have
-                echo "<script>
-                alert('An error occurred during account creation.');
-                window.location='index.php';
-                </script>";
-                exit;
-            }
-        }
-
-    } catch (PDOException $e) {
-        // Log the error (do NOT echo $e->getMessage() to the user)
-        error_log("Database Error: " . $e->getMessage());
+    // Handle potential API failure
+    if ($existing_data === null) {
+        error_log("Supabase check request failed during signup.");
         echo "<script>
-        alert('A critical database error occurred. Please try again later.');
+        alert('A critical system error occurred while checking user data. Please try again.');
         window.location='index.php';
         </script>";
         exit;
+    }
+
+    // Check if any existing user records were found
+    if (!empty($existing_data)) {
+        
+        $existing_user = $existing_data[0];
+        $alert_message = '';
+        
+        // Determine the specific conflict for the alert
+        if (isset($existing_user['fname']) && $existing_user['fname'] === $fname) {
+            $alert_message = "User with name '{$fname}' already exists.";
+        } else if (isset($existing_user['email']) && $existing_user['email'] === $email) {
+            $alert_message = "User with email '{$email}' already exists.";
+        } else {
+             // Fallback if the specific conflict can't be determined
+            $alert_message = "A user account already exists with one of the provided details.";
+        }
+
+        echo "<script>
+        alert('{$alert_message}');
+        window.location='index.php';
+        </script>";
+        exit;
+
+    } else {
+        // 4. Insert New User via Supabase REST API (POST request)
+        $new_user_data = [
+            'uniqid' => $uid,
+            'fname' => $fname,
+            'email' => $email,
+            'password' => $pword_hash // Stored using password_hash()
+        ];
+
+        // The endpoint is just the table name, the method is POST
+        $insert_endpoint = "signup_biz";
+        $response = supabaseRequest($insert_endpoint, 'POST', $new_user_data);
+        
+        // Check if the insertion was successful
+        // Supabase returns an array of the inserted row(s) on success, or null on failure.
+        if ($response && !empty($response[0]) && isset($response[0]['id'])) {
+            echo "<script>
+            alert('Account Created Successfully! Go back to the login page to sign in');
+            window.location='index.php?showlogin=1';
+            </script>";
+            exit;
+        } else {
+            // API insertion failed or returned unexpected data
+            error_log("Supabase insert failed. Response: " . print_r($response, true));
+            echo "<script>
+            alert('An error occurred during account creation.');
+            window.location='index.php';
+            </script>";
+            exit;
+        }
     }
 }
 ?>

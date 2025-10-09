@@ -1,69 +1,68 @@
 <?php
-// Start the session if it hasn't been started yet (though it should be in your main file)
-// if (session_status() === PHP_SESSION_NONE) {
-//     session_start();
-// }
+// login_proc.php
 
-require_once 'db_conn/conn.php';
-// Assuming the Sanitize function is also available through the required file or globally.
-global $conn;
+require_once 'db_conn/conn.php'; 
+// Assumes conn.php defines: supabaseRequest(), Sanitize(), and session_start() is active.
+
+// Initialize variables to prevent PHP errors before the POST request is processed
+$msg = '';
+$title = '';
+$text = '';
+
 if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])){
-    // 1. Sanitize and prepare input
+    
+    // 1. Sanitize input
     $email = Sanitize($_POST['email']);
-    
-    // Get the raw password input (DO NOT MD5 IT YET)
-    $raw_password = $_POST['pword']; 
+    $raw_password = $_POST['pword']; // Raw password for secure verification
 
-    // 2. Retrieve user data (including the stored password hash) based on the email
-    // Use prepared statements for security. PostgreSQL identifiers are usually lowercase and unquoted.
-    $sel_info = "SELECT uniqid, password FROM signup_biz WHERE email = :email";
+    // 2. Retrieve user data (hash and unique ID) via Supabase REST API
+    // Filter by email and select the necessary columns.
+    // The query part is: table_name?column_name=eq.value&select=columns
+    $endpoint = "signup_biz?email=eq.$email&select=uniqid,password";
+    $data = supabaseRequest($endpoint);
     
-    try {
-        $stmt = $conn->prepare($sel_info);
-        $stmt->execute(['email' => $email]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Check if the API returned data (meaning a user was found)
+    if ($data && !empty($data[0])) {
+        $user_row = $data[0];
+        $stored_hash = $user_row['password'];
 
-        // 3. Check if a user was found and verify the password
-        if ($row && password_verify($raw_password, $row['password'])) {
+        // 3. Securely verify the password
+        if (password_verify($raw_password, $stored_hash)) {
             
-            // Password is correct! Set the session variable and redirect.
-            $_SESSION['uid'] = $row['uniqid'];
-             $msg ='success';
+            // Password is correct!
+            $_SESSION['uid'] = $user_row['uniqid'];
+            $msg = 'success';
             $title = 'Login Successful';
             $text = "Welcome back!";
-            // header('location:index.php');
-         // Always exit after a header redirect
             
         } else {
-            // No user found with that email, or password verification failed
-            // echo "<script>
-            // alert('Incorrect Password or Email');
-            // window.location='index.php?showlogin=1';
-            // </script>";
-            $msg ='error';
+            // Password verification failed
+            $msg = 'error';
             $title = 'Login Failed';
             $text = "Incorrect Password or Email";
-                 
         }
-
-    } catch (PDOException $e) {
-        // Log the error (do NOT echo $e->getMessage() to the user in production)
-        error_log("Login Database Error: " . $e->getMessage());
-        echo "<script>
-        alert('A system error occurred. Please try again later.');
-        window.location='index.php?showlogin=1';
-        </script>";
+    } else {
+        // No user found with that email
+        $msg = 'error';
+        $title = 'Login Failed';
+        $text = "Incorrect Password or Email";
     }
+
+} else {
+    // Handle cases where the form wasn't submitted correctly (optional)
+    // You could redirect them or set a default error message.
+    $msg = 'error';
+    $title = 'Error';
+    $text = "Form submission error.";
 }
 ?>
 
-<!-- SweetAlert2 (latest version from jsDelivr CDN) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Login Status</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
@@ -72,12 +71,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])){
         icon: '<?php echo $msg; ?>',
         title: '<?php echo $title; ?>',
         text: '<?php echo $text; ?>',
-        confirmButtonText: 'Close'
+        confirmButtonText: 'OK'
     }).then(() => {
-            window.location='index.php';// Redirect after alert is closed
-       
+        // Redirect to the index page after the alert is closed
+        window.location='index.php'; 
     });
-</script>
+    </script>
 </body>
-
 </html>
