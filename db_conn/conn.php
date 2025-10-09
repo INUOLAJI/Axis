@@ -8,8 +8,8 @@ session_start();
  * Replace the placeholders below with your actual Supabase credentials.
  * Get them from: Project → Settings → API
  */
-define('SUPABASE_URL', 'https://YOUR-PROJECT-REF.supabase.co'); // e.g. https://abcd1234.supabase.co
-define('SUPABASE_KEY', 'YOUR-ANON-KEY'); // e.g. eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+define('SUPABASE_URL', 'https://aukqkugucnsfiflbtnwt.supabase.co'); // e.g. https://abcd1234.supabase.co
+define('SUPABASE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1a3FrdWd1Y25zZmlmbGJ0bnd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTc3NzIsImV4cCI6MjA3NTU5Mzc3Mn0.oHg1Zx3I3JBmlx1XjXU-cXFcw6pvf8y9My2Sz4bUUkk'); // e.g. eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 
 /**
