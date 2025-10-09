@@ -1,19 +1,19 @@
 <?php
 session_start();
 
-$host = getenv('DB_HOST');
-$port = getenv('DB_PORT');
-$db_name = getenv('DB_NAME');
-$user = getenv('DB_USER');
-$password = getenv('DB_PASSWORD'); 
+// $host = getenv('DB_HOST');
+// $port = getenv('DB_PORT');
+// $db_name = getenv('DB_NAME');
+// $user = getenv('DB_USER');
+// $password = getenv('DB_PASSWORD'); 
 
 // Database Connection Details for Supabase (PostgreSQL)
 // NOTE: I'm using the connection details you provided.
-// $host = "aws-1-us-east-2.pooler.supabase.com";
-// $port = 6543;
-// $db_name = "postgres";
-// $user = "postgres.aukqkugucnsfiflbtnwt";
-// $password = "EOIrbndYzlGP4A7P"; 
+$host = "aws-1-us-east-2.pooler.supabase.com";
+$port = 6543;
+$db_name = "postgres";
+$user = "postgres.aukqkugucnsfiflbtnwt";
+$password = "EOIrbndYzlGP4A7P"; 
 
 try {
     // Establish PDO connection
