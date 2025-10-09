@@ -1,92 +1,72 @@
 <?php
 session_start();
 
-$host = getenv('DB_HOST');
-$port = getenv('DB_PORT');
-$db_name = getenv('DB_NAME');
-$user = getenv('DB_USER');
-$password = getenv('DB_PASSWORD'); 
-
-// Database Connection Details for Supabase (PostgreSQL)
-// NOTE: I'm using the connection details you provided.
-// $host = "aws-1-us-east-2.pooler.supabase.com";
-// $port = 6543;
-// $db_name = "postgres";
-// $user = "postgres.aukqkugucnsfiflbtnwt";
-// $password = "EOIrbndYzlGP4A7P"; 
+/**
+ * Load database credentials from environment variables (Render)
+ * If not available, fallback to local dev values.
+ */
+$host = getenv('DB_HOST') ?: "aws-1-us-east-2.pooler.supabase.com";
+$port = getenv('DB_PORT') ?: 6543;
+$db_name = getenv('DB_NAME') ?: "postgres";
+$user = getenv('DB_USER') ?: "postgres.aukqkugucnsfiflbtnwt";
+$password = getenv('DB_PASSWORD') ?: "EOIrbndYzlGP4A7P";
 
 try {
-    // Establish PDO connection
+    // Construct the DSN with SSL mode enforced (required by Supabase)
+    $dsn = "pgsql:host=$host;port=$port;dbname=$db_name;sslmode=require";
+
+    // Create PDO connection
     $conn = new PDO(
-        "pgsql:host=$host;port=$port;dbname=$db_name; sslmode=require",
+        $dsn,
         $user,
         $password,
         [
-            // Throw exceptions on error for better debugging
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            // Set default fetch mode to associative array
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ]
     );
+
 } catch (PDOException $e) {
-    // Display error message and halt script execution
-    // In a production environment, you should log the error and display a generic message.
-    die("Connection failed: " . $e->getMessage());
-    // exit() is redundant after die() but harmless
+    // On Render, log errors instead of exposing them
+    error_log("Database connection failed: " . $e->getMessage());
+
+    // Show a user-friendly message
+    die("<h3>⚠️ Unable to connect to database. Please try again later.</h3>");
 }
 
-
 /**
- * Function to sanitize user input.
- * This is primarily for displaying data safely (HTML escaping).
- * Prepared statements (used in u_info) handle SQL injection protection.
+ * Sanitize user input to prevent XSS.
  */
-function Sanitize($santize){
-    $santize = trim($santize);
-    // htmlspecialchars() converts special characters to HTML entities, preventing XSS
-    $santize = htmlspecialchars($santize);
-    // stripslashes() removes backslashes
-    $santize = stripslashes($santize);
-
-    return $santize;
+function Sanitize($sanitize) {
+    $sanitize = trim($sanitize);
+    $sanitize = htmlspecialchars($sanitize, ENT_QUOTES, 'UTF-8');
+    $sanitize = stripslashes($sanitize);
+    return $sanitize;
 }
 
-
 /**
- * Secure function to retrieve a specific column value for a user ID
- * converted to use PDO Prepared Statements for PostgreSQL.
- * * @param string $uid The unique ID of the user.
- * @param string $info The name of the column/info to retrieve (e.g., 'fname', 'email').
- * @return string The value of the requested info, or null if not found.
+ * Get a user’s specific column value by unique_id.
+ * Uses prepared statements for SQL safety.
  */
-function u_info($uid, $info){
-    // Access the global PDO connection object
+function u_info($uid, $info) {
     $cont = $GLOBALS['conn'];
-    
-    // IMPORTANT: Use prepared statement with a placeholder (?) and double quotes for column name
-    // We dynamically include $info in the query string, which is generally safe
-    // for column names but requires careful validation if $info comes from user input.
-    $get = "SELECT \"$info\" FROM signup_biz WHERE unique_id = ?";
-    
-    try {
-        $stmt = $cont->prepare($get);
-        
-        // Execute the statement with the unique ID as the parameter
-        $stmt->execute([$uid]);
-        
-        // Fetch the row as an associative array
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        // Check if a row was found and return the requested column value
-        return $row ? $row[$info] : null;
 
+    // Whitelist allowed columns to avoid SQL injection through $info
+    $allowed = ['fname', 'lname', 'email', 'phone', 'biz_name', 'unique_id'];
+    if (!in_array($info, $allowed)) {
+        error_log("Invalid column name in u_info: " . $info);
+        return null;
+    }
+
+    $sql = "SELECT \"$info\" FROM signup_biz WHERE unique_id = ?";
+    try {
+        $stmt = $cont->prepare($sql);
+        $stmt->execute([$uid]);
+        $row = $stmt->fetch();
+        return $row ? $row[$info] : null;
     } catch (PDOException $e) {
-        // Handle potential SQL errors during query execution
         error_log("Error in u_info: " . $e->getMessage());
-        return null; 
+        return null;
     }
 }
-
-// The original MySQLi connection check is no longer needed/relevant for PDO success
-// but the try...catch block already handles connection failure.
 ?>
