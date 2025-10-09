@@ -1,44 +1,74 @@
 <?php
 session_start();
 
-$host = getenv('DB_HOST') ?: 'aws-1-us-east-2.supabase.com';
-$port = getenv('DB_PORT') ?: 5432;
-$db_name = getenv('DB_NAME') ?: 'postgres';
-$user = getenv('DB_USER') ?: 'postgres.aukqkugucnsfiflbtnwt';
-$password = getenv('DB_PASSWORD') ?: 'EOIrbndYzlGP4A7P';
+/**
+ * ===============================
+ *  SUPABASE CONNECTION SETTINGS
+ * ===============================
+ * Replace the placeholders below with your actual Supabase credentials.
+ * Get them from: Project → Settings → API
+ */
+define('SUPABASE_URL', 'https://YOUR-PROJECT-REF.supabase.co'); // e.g. https://abcd1234.supabase.co
+define('SUPABASE_KEY', 'YOUR-ANON-KEY'); // e.g. eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-try {
-    $dsn = "pgsql:host=$host;port=$port;dbname=$db_name;sslmode=require";
-    $conn = new PDO($dsn, $user, $password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-    ]);
 
-    // Test query
-    $conn->query("SELECT 1");
-} catch (PDOException $e) {
-    echo "<h3>⚠️ Unable to connect to database. Please try again later.</h3>";
-    echo "<pre>" . htmlspecialchars($e->getMessage()) . "</pre>";
-    exit;
-}
+/**
+ * ==========================================
+ *  Reusable Function: Call Supabase REST API
+ * ==========================================
+ */
+function supabaseRequest($endpoint, $method = 'GET', $body = null) {
+    $url = SUPABASE_URL . '/rest/v1/' . ltrim($endpoint, '/');
 
-function Sanitize($text) {
-    $text = trim($text);
-    $text = stripslashes($text);
-    return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-}
+    $headers = [
+        'apikey: ' . SUPABASE_KEY,
+        'Authorization: Bearer ' . SUPABASE_KEY,
+        'Content-Type: application/json',
+        'Prefer: return=representation'
+    ];
 
-function u_info($uid, $info) {
-    $cont = $GLOBALS['conn'];
-    $get = "SELECT \"$info\" FROM signup_biz WHERE unique_id = ?";
-    try {
-        $stmt = $cont->prepare($get);
-        $stmt->execute([$uid]);
-        $row = $stmt->fetch();
-        return $row[$info] ?? null;
-    } catch (PDOException $e) {
-        error_log("Error in u_info: " . $e->getMessage());
+    $options = [
+        'http' => [
+            'method' => $method,
+            'header' => implode("\r\n", $headers),
+            'content' => $body ? json_encode($body) : null
+        ]
+    ];
+
+    $context = stream_context_create($options);
+    $response = @file_get_contents($url, false, $context);
+
+    if ($response === false) {
+        error_log("Supabase API request failed for endpoint: $endpoint");
         return null;
     }
+
+    return json_decode($response, true);
 }
+
+
+/**
+ * ============================
+ *  Input Sanitization Helper
+ * ============================
+ */
+function Sanitize($value) {
+    $value = trim($value);
+    $value = stripslashes($value);
+    $value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    return $value;
+}
+
+
+/**
+ * ====================================================
+ *  Function: Get User Info by Unique ID (u_info)
+ * ====================================================
+ * Reads from the 'signup_biz' table in Supabase
+ */
+function u_info($uid, $column) {
+    $data = supabaseRequest("signup_biz?uniqid=eq.$uid&select=$column");
+    return $data && isset($data[0][$column]) ? $data[0][$column] : null;
+}
+
 ?>
