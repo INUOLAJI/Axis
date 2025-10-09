@@ -28,14 +28,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])){
             
             // Password is correct! Set the session variable and redirect.
             $_SESSION['uid'] = $row['uniqid'];
-            header('location:navbar.php');
+            header('location:index.php');
             exit; // Always exit after a header redirect
             
         } else {
             // No user found with that email, or password verification failed
             echo "<script>
             alert('Incorrect Password or Email');
-            window.location='navbar.php?showlogin=1';
+            window.location='index.php?showlogin=1';
             </script>";
             exit;
         }
@@ -45,7 +45,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])){
         error_log("Login Database Error: " . $e->getMessage());
         echo "<script>
         alert('A system error occurred. Please try again later.');
-        window.location='navbar.php?showlogin=1';
+        window.location='index.php?showlogin=1';
         </script>";
         exit;
     }

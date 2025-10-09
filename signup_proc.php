@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['signup'])) {
     if ($raw_pword !== $raw_cword) {
         echo "<script>
         alert('Password doesn\\'t match Confirm Password');
-        window.location='navbar.php?showsignup=1';
+        window.location='index.php?showsignup=1';
         </script>";
         exit;
     }
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['signup'])) {
 
             echo "<script>
             alert('{$alert_message}');
-            window.location='navbar.php';
+            window.location='index.php';
             </script>";
             exit;
 
@@ -65,14 +65,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['signup'])) {
             ])) {
                 echo "<script>
                 alert('Account Created Successfully! Go back to the login page to sign in');
-                window.location='navbar.php?showlogin=1';
+                window.location='index.php?showlogin=1';
                 </script>";
                 exit;
             } else {
                 // This block is often caught by the PDOException, but good to have
                 echo "<script>
                 alert('An error occurred during account creation.');
-                window.location='navbar.php';
+                window.location='index.php';
                 </script>";
                 exit;
             }
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['signup'])) {
         error_log("Database Error: " . $e->getMessage());
         echo "<script>
         alert('A critical database error occurred. Please try again later.');
-        window.location='navbar.php';
+        window.location='index.php';
         </script>";
         exit;
     }
