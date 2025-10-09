@@ -1,0 +1,22 @@
+# Ignore local dev files
+.env
+.DS_Store
+.vscode/
+.idea/
+node_modules/
+vendor/
+tests/
+tmp/
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+
+# Ignore XAMPP or system-specific files
+xampp/
+C:/xampp/
+*.bak
+*.log
+
+# Ignore git files
+.git/
+.gitignore
