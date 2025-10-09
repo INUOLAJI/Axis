@@ -1,7 +1,7 @@
 <?php
 require_once 'db_conn/conn.php'; // Now contains the PDO connection $conn
 // Note: You must ensure 'Sanitize' function is also available, either in conn.php or here.
-
+global $conn;
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['signup'])) {
     
     // 1. Sanitize and prepare input

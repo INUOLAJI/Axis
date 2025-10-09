@@ -6,7 +6,7 @@
 
 require_once 'db_conn/conn.php';
 // Assuming the Sanitize function is also available through the required file or globally.
-
+global $conn;
 if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])){
     // 1. Sanitize and prepare input
     $email = Sanitize($_POST['email']);
