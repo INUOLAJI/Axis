@@ -1,8 +1,8 @@
 <?php
 // Start the session if it hasn't been started yet (though it should be in your main file)
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// if (session_status() === PHP_SESSION_NONE) {
+//     session_start();
+// }
 
 require_once 'db_conn/conn.php';
 // Assuming the Sanitize function is also available through the required file or globally.
