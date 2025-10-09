@@ -28,16 +28,22 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])){
             
             // Password is correct! Set the session variable and redirect.
             $_SESSION['uid'] = $row['uniqid'];
-            header('location:index.php');
-            exit; // Always exit after a header redirect
+             $msg ='success';
+            $title = 'Login Successful';
+            $text = "Welcome back!";
+            // header('location:index.php');
+         // Always exit after a header redirect
             
         } else {
             // No user found with that email, or password verification failed
-            echo "<script>
-            alert('Incorrect Password or Email');
-            window.location='index.php?showlogin=1';
-            </script>";
-            exit;
+            // echo "<script>
+            // alert('Incorrect Password or Email');
+            // window.location='index.php?showlogin=1';
+            // </script>";
+            $msg ='error';
+            $title = 'Login Failed';
+            $text = "Incorrect Password or Email";
+                 
         }
 
     } catch (PDOException $e) {
@@ -47,7 +53,31 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])){
         alert('A system error occurred. Please try again later.');
         window.location='index.php?showlogin=1';
         </script>";
-        exit;
     }
 }
 ?>
+
+<!-- SweetAlert2 (latest version from jsDelivr CDN) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <script>
+    Swal.fire({
+        icon: '<?php echo $msg; ?>',
+        title: '<?php echo $title; ?>',
+        text: '<?php echo $text; ?>',
+        confirmButtonText: 'Close'
+    }).then(() => {
+            window.location='index.php';// Redirect after alert is closed
+       
+    });
+</script>
+</body>
+
+</html>
