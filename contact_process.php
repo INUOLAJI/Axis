@@ -1,6 +1,6 @@
 <?php
 // Set your recipient email address here
-$recipient_email = "YOUR_EMAIL@example.com"; 
+$recipient_email = "belloinuolaji@gmail.com"; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
