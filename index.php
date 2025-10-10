@@ -1191,7 +1191,18 @@ document.addEventListener("DOMContentLoaded", function() {
     ride: 'carousel'
   });
 
-
+document.addEventListener("DOMContentLoaded", function() {
+  var navbarCollapse = document.getElementById('navbarNav');
+  var navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+  navLinks.forEach(function(link) {
+    link.addEventListener('click', function() {
+      if (navbarCollapse.classList.contains('show')) {
+        var bsCollapse = new bootstrap.Collapse(navbarCollapse, {toggle: false});
+        bsCollapse.hide();
+      }
+    });
+  });
+});
 
 
 
