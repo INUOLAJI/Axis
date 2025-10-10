@@ -795,39 +795,21 @@ html {
 </section>
 
 <!-- Contact Form Section -->
-<section id="contact" class="py-5" data-aos="fade-up">
-  <div class="container">
-    <div class="row align-items-center">
-      
-      <!-- Contact Form -->
-      <div class="col-lg-6 mb-5 mb-lg-0">
-        <h2 class="fw-bold mb-4">Send Us a Message</h2>
-        <p class="mb-4 text-muted">Have questions or want to start a project? Fill out the form below and we’ll get back to you as soon as possible.</p>
-        <form>
-          <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Your Name" required>
-          </div>
-          <div class="mb-3">
-            <input type="email" class="form-control" placeholder="Your Email" required>
-          </div>
-          <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Subject" required>
-          </div>
-          <div class="mb-3">
-            <textarea class="form-control" rows="5" placeholder="Message" required></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary btn-lg">Send Message</button>
-        </form>
-      </div>
-
-      <!-- Illustration -->
-      <div class="col-lg-6 text-center">
-        <img src="IMAGES/download.png" class="img-fluid" alt="Contact Illustration" loading="lazy">
-      </div>
-
-    </div>
+<form action="contact_process.php" method="POST">
+  <div class="mb-3">
+    <input type="text" class="form-control" name="name" placeholder="Your Name" required>
   </div>
-</section>
+  <div class="mb-3">
+    <input type="email" class="form-control" name="email" placeholder="Your Email" required>
+  </div>
+  <div class="mb-3">
+    <input type="text" class="form-control" name="subject" placeholder="Subject" required>
+  </div>
+  <div class="mb-3">
+    <textarea class="form-control" rows="5" name="message" placeholder="Message" required></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary btn-lg">Send Message</button>
+</form>
 
 
 
